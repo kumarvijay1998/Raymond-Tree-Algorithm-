@@ -11,7 +11,6 @@ import daj.*;
 class Prog extends Program
 {
   private int number;
-  public int index;
   public Message msg;
   public int Holder;//It will point to parent on the path to the root
   public boolean sentRequest;//The node has sent request or not to parent for token access
@@ -37,6 +36,7 @@ class Prog extends Program
     if(i==0) {
     	Holder=0;
     	haveToken=true;
+    	sentRequest=true;
     }
     else if(i==1) {
     	Holder=0;
@@ -54,7 +54,7 @@ class Prog extends Program
   // --------------------------------------------------------------------------
   public void send_request(int sendingnode,int parentnode) {
 	  System.out.println("Request is received from node "+sendingnode+" and its parent node is "+parentnode);
-	  msgOut.getChannel(Holder).send(new Request(number, Holder));
+	  msgOut.getChannel(Holder).send(new Request(sendingnode, parentnode));
   }
 //  public void get_request(int sendingnode,int receivingnode) {
 //	  
@@ -74,17 +74,17 @@ class Prog extends Program
 	  outChannels = out().getSize();
 
 	  for (i=0; i<outChannels; i++) {
-
 	  msgOut.addChannel(out(i));
-
 	  }
     
     while(true) {
-    	if(haveToken) {
+    	if(haveToken&&sentRequest) {
     		
     		//check whether the top is same as the node otherwise send this token to the top
     		if(request_q.isEmpty()||(request_q.peek()==number)) {
     			//node itself will execute
+    			haveToken=false;
+    			sentRequest=false;
     			System.out.println("This Node will now USE CS");
     			/*
 
@@ -98,7 +98,10 @@ class Prog extends Program
         		//send token to nextReceiver
         		msgOut.getChannel(i).send(new Token(number,nextReceiver));
         		haveToken=false;
+    			}else {
+    				haveToken=true;
     			}
+    			
     			
     			
     		}else {
@@ -118,7 +121,7 @@ class Prog extends Program
     		sentRequest=true;
     		request_q.add(number);
     		send_request(number,Holder);
-    		break;
+    		
     	
     		
     	}
@@ -128,20 +131,23 @@ class Prog extends Program
     	if (msg.getReceiver() == number) {
     		if (msg instanceof Request) {
     			//add sender to queue
-        		request_q.add(number);
+        		request_q.add(msg.getSender());
         		//if no request sent then send
         		if(number==Holder&&haveToken) {
         			//give token directly to the sender && set holder to point to that node 
         			Holder=msg.getSender();
+//        			if(!request_q.isEmpty()) {
+//        				send_request(number,Holder);
+//        			}
+        			msgOut.getChannel(i).send(new Token(number,msg.getSender()));
         			if(!request_q.isEmpty()) {
         				send_request(number,Holder);
         			}
-        			
         		}
         		else if(!sentRequest) {
         			send_request(number,Holder);
         		}else {
-        			request_q.add(msg.getSender());
+        			//request_q.add(msg.getSender());
         		}
     		}else {
     			haveToken = true;
