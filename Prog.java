@@ -11,11 +11,12 @@ import daj.*;
 class Prog extends Program
 {
   private int number;
+  
   public Message msg;
   public int Holder;//It will point to parent on the path to the root
   public boolean sentRequest;//The node has sent request or not to parent for token access
   Queue<Integer> request_q = new LinkedList<>();//Each node has fifo queue
-  public static boolean haveToken=false; //false-don't have token; true-has token
+  public boolean haveToken=false; //false-don't have token; true-has token
   private InChannelSet msgIn;
   private OutChannelSet msgOut;
   
@@ -27,7 +28,7 @@ class Prog extends Program
     number = i;	
     msg = null;
     sentRequest=false;
-   
+    haveToken=false;
     msgIn = new InChannelSet();
     msgOut = new OutChannelSet();
     
@@ -37,6 +38,7 @@ class Prog extends Program
     	Holder=0;
     	haveToken=true;
     	sentRequest=true;
+    	request_q.add(number);
     }
     else if(i==1) {
     	Holder=0;
@@ -54,7 +56,10 @@ class Prog extends Program
   // --------------------------------------------------------------------------
   public void send_request(int sendingnode,int parentnode) {
 	  System.out.println("Request is received from node "+sendingnode+" and its parent node is "+parentnode);
-	  msgOut.getChannel(Holder).send(new Request(sendingnode, parentnode));
+	  OutChannel c=msgOut.getChannel(Holder);
+	  System.out.println("c="+c);
+	  c.send(new Request(sendingnode, parentnode));
+	  //send(new Request(sendingnode, parentnode));
   }
 //  public void get_request(int sendingnode,int receivingnode) {
 //	  
@@ -66,23 +71,34 @@ class Prog extends Program
 
 
 	  inChannels = in().getSize();
-
+	  System.out.println(number+"inchannels="+inChannels);
 	  for (i=0; i<inChannels; i++) {
 		  msgIn.addChannel(in(i));
+		//  System.out.println("Node"+number+"Inchannels"+msgIn.getChannel(i));
 	  }
 	  
 	  outChannels = out().getSize();
 
+	  System.out.println(number+"outchannels="+outChannels);
+
 	  for (i=0; i<outChannels; i++) {
 	  msgOut.addChannel(out(i));
+	 // System.out.println("Node "+number +"Outchannel "+msgOut.getChannel(i));
 	  }
     
     while(true) {
+    	
+    	
+    	
+    	
+    	System.out.println("node "+number+"have token"+haveToken+" and sent Request"+sentRequest);
     	if(haveToken&&sentRequest) {
     		
     		//check whether the top is same as the node otherwise send this token to the top
+    		System.out.println("peek of "+number+" is "+request_q.peek());
     		if(request_q.isEmpty()||(request_q.peek()==number)) {
     			//node itself will execute
+    			request_q.remove();
     			haveToken=false;
     			sentRequest=false;
     			System.out.println("This Node will now USE CS");
@@ -98,7 +114,14 @@ class Prog extends Program
         		//send token to nextReceiver
         		msgOut.getChannel(i).send(new Token(number,nextReceiver));
         		haveToken=false;
+        		if(!request_q.isEmpty()) {
+        			//send request and set holder point to that node
+        			Holder=nextReceiver;
+        			sentRequest=true;
+        			send_request(number,Holder);
+        		}
     			}else {
+    				System.out.println("Hello Test");
     				haveToken=true;
     			}
     			
@@ -108,6 +131,12 @@ class Prog extends Program
     			int requestornode=request_q.remove();
     			msgOut.getChannel(i).send(new Token(number,requestornode));
     			haveToken=false;
+    			if(!request_q.isEmpty()) {
+        			//send request and set holder point to that node
+        			Holder=requestornode;
+        			sentRequest=true;
+        			send_request(number,Holder);
+        		}
     		}
     		
     		
@@ -118,43 +147,18 @@ class Prog extends Program
     	else if(!haveToken && !sentRequest) {
     		//send request to parent i.e. where holder is pointing to
     		//sendRequest(nodeid,holder);
+    		System.out.println("node "+number+"Holder="+Holder);
     		sentRequest=true;
     		request_q.add(number);
     		send_request(number,Holder);
-    		
-    	
-    		
     	}
+    	System.out.println("Going to block");
     	fromChannel=msgIn.select();
-
+    	System.out.println("fromChannel "+fromChannel);
     	msg = (Msg)msgIn.getChannel(fromChannel).receive();
-    	if (msg.getReceiver() == number) {
-    		if (msg instanceof Request) {
-    			//add sender to queue
-        		request_q.add(msg.getSender());
-        		//if no request sent then send
-        		if(number==Holder&&haveToken) {
-        			//give token directly to the sender && set holder to point to that node 
-        			Holder=msg.getSender();
-//        			if(!request_q.isEmpty()) {
-//        				send_request(number,Holder);
-//        			}
-        			msgOut.getChannel(i).send(new Token(number,msg.getSender()));
-        			if(!request_q.isEmpty()) {
-        				send_request(number,Holder);
-        			}
-        		}
-        		else if(!sentRequest) {
-        			send_request(number,Holder);
-        		}else {
-        			//request_q.add(msg.getSender());
-        		}
-    		}else {
-    			haveToken = true;
-    			sentRequest = false;
-    		}
-    		
-    	}
+    	System.out.println("Released");
+    	System.out.println(msg);
+    	
     }
   
   }
@@ -170,7 +174,6 @@ class Prog extends Program
     else
       msgString = msg.getText();
     return 
-     // "sent: " + String.valueOf(sent) +
-      "\nmsg: " + msgString;
+      "Sent request from "+number+" to parent node"+Holder;
   }
 }
