@@ -38,7 +38,7 @@ class Prog extends Program{
 	    }
 	    else if(i==1) {
 	    	//Holder=0;
-	    	wantToenter=true;
+	    	
 	    	
 	    }
 	    else if(i==2) {
@@ -55,7 +55,7 @@ class Prog extends Program{
 	public void main() {
 		int outChannels, inChannels, i;
 		// TODO Auto-generated method stub
-		for(int j=0;j<=4;j++) {
+		for(int j=0;j<4;j++) {
 		
 		inChannels = in().getSize();
 		outChannels = out().getSize();
