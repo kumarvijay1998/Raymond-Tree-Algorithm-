@@ -2,7 +2,9 @@ public class Request extends Msg {
 
 
 public Request (int sender, int receiver) {
-	super(sender, receiver);
+
+super(sender, receiver);
+
 }
 
 
@@ -15,4 +17,3 @@ receiver;
 }
 
 } // Request
-

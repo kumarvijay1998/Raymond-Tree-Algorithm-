@@ -1,17 +1,22 @@
 public class Token extends Msg {
 
+//protected FIFO map;
 
-protected boolean havetoken=false;
 
 public Token (int sender, int receiver) {
 
 super(sender, receiver);
 
-this.havetoken=true;
+//this.map = map;
 
 }
 
 
+//public FIFO getMap() {
+//
+//return map;
+//
+//}
 
 
 public String getText () {
@@ -23,4 +28,3 @@ receiver;
 }
 
 } // Token
-

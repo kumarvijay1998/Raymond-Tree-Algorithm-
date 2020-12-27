@@ -1,4 +1,4 @@
-import daj.*;
+
 
 
 public class Msg extends daj.Message
@@ -35,9 +35,8 @@ return sender;
 
 public int getReceiver() {
 
-  return receiver;
+return receiver;
 
 }
 
 } // Msg
-
