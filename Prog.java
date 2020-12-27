@@ -5,7 +5,7 @@ import daj.*;
 class Prog extends Program{
 	  public int number;
 	  public Message msg;
-	  public int Holder;//It will point to parent on the path to the root
+	 // public int Holder;//It will point to parent on the path to the root
 	  public boolean sentRequest;//The node has sent request or not to parent for token access
 	  public Queue<Integer> request_q;//Each node has fifo queue
 	  public boolean haveToken=false; //false-don't have token; true-has token
@@ -30,22 +30,22 @@ class Prog extends Program{
 	    //initial configuaration of holder variable.
 	    
 	    if(i==0) {
-	    	Holder=0;
+	    	//Holder=0;
 	    	haveToken=true;
 	    	sentRequest=true;
 	    	request_q.add(number);
 	    	
 	    }
 	    else if(i==1) {
-	    	Holder=0;
-	    	
+	    	//Holder=0;
+	    	wantToenter=true;
 	    	
 	    }
 	    else if(i==2) {
-	    	Holder=0;
+	    	//Holder=0;
 	    }
 	    else if(i==3) {
-	    	Holder=1;
+	    	//Holder=1;
 	    	wantToenter=true;
 	    }
 	  } 
