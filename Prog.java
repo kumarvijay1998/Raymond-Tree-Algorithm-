@@ -5,6 +5,7 @@ import daj.*;
 class Prog extends Program{
 	  public int number;
 	  public Message msg;
+	  public String  msgString;
 	 // public int Holder;//It will point to parent on the path to the root
 	  public boolean sentRequest;//The node has sent request or not to parent for token access
 	  public Queue<Integer> request_q;//Each node has fifo queue
@@ -32,20 +33,25 @@ class Prog extends Program{
 	    if(i==0) {
 	    	//Holder=0;
 	    	haveToken=true;
-	    	sentRequest=true;
-	    	request_q.add(number);
-	    	
+	    	 msgString=null;
+	    	//sentRequest=false;
+	    	//request_q.add(number);
+	    	wantToenter=true;
 	    }
 	    else if(i==1) {
 	    	//Holder=0;
-	    	
+	    	 msgString=null;
+	    	wantToenter=true;
 	    	
 	    }
 	    else if(i==2) {
 	    	//Holder=0;
+	    	 msgString=null;
+	    	wantToenter=true;
 	    }
 	    else if(i==3) {
 	    	//Holder=1;
+	    	 msgString=null;
 	    	wantToenter=true;
 	    }
 	  } 
@@ -67,12 +73,87 @@ class Prog extends Program{
 		}
 		 
 		if(wantToenter) {
+			
 			//send request to parent
 //			 OutChannel c=msgOut.getChannel(0);
 //			 c.send(new Request(number, 0));
-			if(haveToken) {
-				//Execute CS
-				wantToenter=false;
+			if(haveToken) {//Means it is root node
+				request_q.add(number);//add to its own queue
+				if(request_q.peek()==number) {
+					wantToenter=false;
+					request_q.remove();
+					//Execute CS
+					System.out.println("Node "+number+"  is Executing CS");
+					msgString="Node "+number+"  is Executing CS";
+					if(!request_q.isEmpty()) {
+						haveToken=false;
+						//send the token to the requesting node and point to that node
+						int nextReceiver=request_q.peek();
+						request_q.remove();
+						int link_number=getLink(number,nextReceiver);
+						OutChannel c=msgOut.getChannel(link_number);
+						c.send(new Token(number, nextReceiver));
+						
+						//Update parent of the current node i.e. point to the node which has token 
+						if(number==0) {
+							node0Parent=nextReceiver;
+						}
+						else if(number==1) {
+							node1Parent=nextReceiver;
+						}
+						else if(number==2) {
+							node2Parent=nextReceiver;
+						}
+						else if(number==3) {
+							node3Parent=nextReceiver;
+						}
+						
+						//If after giving token there is some request left then request token from the node which have token i.e. node number to whome we are sending our token
+						if(!request_q.isEmpty()) {
+							sentRequest=true;
+							int link_number1=getLink(number,nextReceiver);
+							//send request now to link number
+							 OutChannel c1=msgOut.getChannel(link_number1);
+							 c1.send(new Request(number, nextReceiver));
+						}
+					}
+					//wantToenter=false;
+				}
+				else {
+					haveToken=false;
+					//send the token to the requesting node and point to that node
+					int nextReceiver=request_q.peek();
+					request_q.remove();
+					int link_number=getLink(number,nextReceiver);
+					OutChannel c=msgOut.getChannel(link_number);
+					c.send(new Token(number, nextReceiver));
+					
+					//Update parent of the current node i.e. point to the node which has token 
+					if(number==0) {
+						node0Parent=nextReceiver;
+					}
+					else if(number==1) {
+						node1Parent=nextReceiver;
+					}
+					else if(number==2) {
+						node2Parent=nextReceiver;
+					}
+					else if(number==3) {
+						node3Parent=nextReceiver;
+					}
+					
+					//If after giving token there is some request left then request token from the node which have token i.e. node number to whome we are sending our token
+					if(!request_q.isEmpty()) {
+						sentRequest=true;
+						int link_number1=getLink(number,nextReceiver);
+						//send request now to link number
+						 OutChannel c1=msgOut.getChannel(link_number1);
+						 c1.send(new Request(number, nextReceiver));
+					}
+					
+				}
+				
+				
 			}
 			else {
 				if(sentRequest==false) {
@@ -97,24 +178,46 @@ class Prog extends Program{
 		if(((Msg) msg).getReceiver()==number) {
 			//Check whether it is request or token
 			if (msg instanceof Request){
-				System.out.println("It is request");
+				//System.out.println("It is request");
 				int sender_number=((Msg) msg).getSender();
-				((LinkedList<Integer>) request_q).push(sender_number);
+				((LinkedList<Integer>) request_q).add(sender_number);
 	
 				System.out.println("Node"+((Msg) msg).getReceiver()+" Has received msg from "+sender_number);
 				if(haveToken) {
 					//means it is root node
 					//send the token now
+					haveToken=false;
 					int nextReceiver=request_q.peek();
 					//System.out.println("Next receiver"+nextReceiver);
 					//Send token to nextReceiver i.e. Top of of the queue
 					int link_number=getLink(number,nextReceiver);
 					 OutChannel c=msgOut.getChannel(link_number);
 					 c.send(new Token(number, nextReceiver));
-					 
+					 System.out.println("Sending Token from Node  "+number+" to Node "+nextReceiver);
 					 request_q.remove();
+					 
+					 //Modify parent
+					 if(number==0) {
+							node0Parent=nextReceiver;
+					}
+					else if(number==1) {
+							node1Parent=nextReceiver;
+					}
+					else if(number==2) {
+							node2Parent=nextReceiver;
+					}
+					else if(number==3) {
+							node3Parent=nextReceiver;
+					}
 					 //Check if more request in the queue
 					 if(!request_q.isEmpty()) {
+						 //Change parent and send request;
+						    sentRequest=true;
+							int link_number1=getLink(number,nextReceiver);
+							//send request now to link number
+							OutChannel c1=msgOut.getChannel(link_number1);
+							c1.send(new Request(number, nextReceiver));
+						 
 						 
 					 }
 					 
@@ -125,6 +228,7 @@ class Prog extends Program{
 						//already sent request do nothing
 					}
 					else {
+						
 						//send request to parent
 						sentRequest=true;
 						int parent=getParent(number);
@@ -139,32 +243,54 @@ class Prog extends Program{
 				}
 			}
 			else {
-				System.out.println("It is token");
+				//System.out.println("It is token");
 				int nextElement=request_q.peek();
 				System.out.println("Token is receive from"+((Msg) msg).getSender()+" and receiver is"+((Msg) msg).getReceiver());
 				if(nextElement==number) {
+					haveToken=true;
+					wantToenter=false;
 					//The sender has received token it can execute now
 					System.out.println("Node "+number+" is Executing CS");
+					msgString="Node \"+number+\" is Executing CS";
 					//Task Pending :I have to give visualized msg 
 					request_q.remove();
-					haveToken=true;
 					if(request_q.isEmpty()) {
 						//No more request are there
 						sentRequest=false;
 					}
 					else {
+						
 						int nextReceiver=request_q.peek();
+						request_q.remove();
 						//send the token to that receiver
 						int link_number=getLink(number,nextReceiver);
 						OutChannel c=msgOut.getChannel(link_number);
 						c.send(new Token(number, nextReceiver));
+						haveToken=false;
+						//Change the Holder i.e. modify pointer
+						if(number==0) {
+							node0Parent=nextReceiver;
+						}
+						else if(number==1) {
+							node1Parent=nextReceiver;
+						}
+						else if(number==2) {
+							node2Parent=nextReceiver;
+						}
+						else if(number==3) {
+							node3Parent=nextReceiver;
+						}
+						
+						
+						
+						
+						//Check for new requests
 						if(request_q.isEmpty()) {
 							//No need to send the request just change the parent
-							//Task Pending:Modify the parent
 							sentRequest=false;
 						}
 						else {
-							//send request again because the queue is not empty still
+							//send request again because the queue is still not empty 
 							sentRequest=true;
 							int parent=nextReceiver;
 							//get link to parent
@@ -182,13 +308,29 @@ class Prog extends Program{
 					int link_number=getLink(number,receiver);
 					OutChannel c=msgOut.getChannel(link_number);
 					c.send(new Token(number, receiver));
+					//Change the Holder i.e. modify pointer
+					if(number==0) {
+						node0Parent=receiver;
+					}
+					else if(number==1) {
+						node1Parent=receiver;
+					}
+					else if(number==2) {
+						node2Parent=receiver;
+					}
+					else if(number==3) {
+						node3Parent=receiver;
+					}
+					
+					
+					
 					if(request_q.isEmpty()) {
 						//No need to send the request just change the parent
 						//Task Pending:Modify the parent
 						sentRequest=false;
 					}
 					else {
-						//send request again because the queue is not empty still
+						//send request again because the queue is still not empty 
 						sentRequest=true;
 						int parent=receiver;
 						//get link to parent
@@ -208,6 +350,7 @@ class Prog extends Program{
 
 	private int getLink(int number2, int parent) {
 		// TODO Auto-generated method stub
+		//System.out.println("sender "+number2+" receiver"+parent);
 		if(number2==0) {
 			if(parent==1) {
 				return 0;
@@ -257,8 +400,7 @@ class Prog extends Program{
 	}
 	 public String getText()
 	  {
-		return "This part is yet to be implemented";
-	    
+		return "Node is Executing CS "+haveToken;
 //	    if (msg == null)
 //	      msgString = "(null)";
 //	    else
