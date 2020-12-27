@@ -38,24 +38,25 @@ class Prog extends Program{
 	    }
 	    else if(i==1) {
 	    	Holder=0;
-	    	wantToenter=true;
+	    	
 	    	
 	    }
 	    else if(i==2) {
 	    	Holder=0;
-	    	
 	    }
 	    else if(i==3) {
 	    	Holder=1;
-	    	
+	    	wantToenter=true;
 	    }
 	  } 
 	  
 	
 	  
 	public void main() {
-		// TODO Auto-generated method stub
 		int outChannels, inChannels, i;
+		// TODO Auto-generated method stub
+		for(int j=0;j<=4;j++) {
+		
 		inChannels = in().getSize();
 		outChannels = out().getSize();
 		for (i=0; i<inChannels; i++) {
@@ -138,17 +139,69 @@ class Prog extends Program{
 				}
 			}
 			else {
-				//System.out.println("It is token");
+				System.out.println("It is token");
 				int nextElement=request_q.peek();
+				System.out.println("Token is receive from"+((Msg) msg).getSender()+" and receiver is"+((Msg) msg).getReceiver());
 				if(nextElement==number) {
 					//The sender has received token it can execute now
 					System.out.println("Node "+number+" is Executing CS");
+					//Task Pending :I have to give visualized msg 
+					request_q.remove();
 					haveToken=true;
+					if(request_q.isEmpty()) {
+						//No more request are there
+						sentRequest=false;
+					}
+					else {
+						int nextReceiver=request_q.peek();
+						//send the token to that receiver
+						int link_number=getLink(number,nextReceiver);
+						OutChannel c=msgOut.getChannel(link_number);
+						c.send(new Token(number, nextReceiver));
+						if(request_q.isEmpty()) {
+							//No need to send the request just change the parent
+							//Task Pending:Modify the parent
+							sentRequest=false;
+						}
+						else {
+							//send request again because the queue is not empty still
+							sentRequest=true;
+							int parent=nextReceiver;
+							//get link to parent
+							int link_number1=getLink(number,parent);
+							//send request now to link number
+							 OutChannel c1=msgOut.getChannel(link_number1);
+							 c1.send(new Request(number, parent));
+						}
+					}
+				}
+				else {
+					//Token is received but the node is not on top of queue so send it to the requestor
+					int receiver=request_q.peek();
+					request_q.remove();
+					int link_number=getLink(number,receiver);
+					OutChannel c=msgOut.getChannel(link_number);
+					c.send(new Token(number, receiver));
+					if(request_q.isEmpty()) {
+						//No need to send the request just change the parent
+						//Task Pending:Modify the parent
+						sentRequest=false;
+					}
+					else {
+						//send request again because the queue is not empty still
+						sentRequest=true;
+						int parent=receiver;
+						//get link to parent
+						int link_number1=getLink(number,parent);
+						//send request now to link number
+						 OutChannel c1=msgOut.getChannel(link_number1);
+						 c1.send(new Request(number, parent));
+					}
 				}
 				
 			}
 		}
-		 
+	} 
 	}
 
 
@@ -204,12 +257,16 @@ class Prog extends Program{
 	}
 	 public String getText()
 	  {
+		return "This part is yet to be implemented";
 	    
-	    if (msg == null)
-	      msgString = "(null)";
-	    else
-	      msgString = msg.getText();
-	    return 
-	      "\nmsg: " + msgString;
+//	    if (msg == null)
+//	      msgString = "(null)";
+//	    else
+//	      msgString = msg.getText();
+//		 if(haveToken) {
+//			 return "Node "+number+" is Executing CS";
+//		 }else {
+//			 return " Request to "+((Msg) msg).getReceiver() +" is send";
+//		 }
 	  }
 }
