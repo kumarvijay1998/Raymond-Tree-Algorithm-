@@ -5,8 +5,6 @@ import daj.*;
 class Prog extends Program{
 	  public int number;
 	  public Message msg;
-	  public String  msgString;
-	 // public int Holder;//It will point to parent on the path to the root
 	  public boolean sentRequest;//The node has sent request or not to parent for token access
 	  public Queue<Integer> request_q;//Each node has fifo queue
 	  public boolean haveToken=false; //false-don't have token; true-has token
@@ -28,30 +26,20 @@ class Prog extends Program{
 	    msgIn = new InChannelSet();
 	    msgOut = new OutChannelSet();
 	    request_q= new LinkedList<>();
-	    //initial configuaration of holder variable.
+	    //initial configuaration of wantToenter  variable and haveToken variable.
 	    
 	    if(i==0) {
-	    	//Holder=0;
 	    	haveToken=true;
-	    	 msgString=null;
-	    	//sentRequest=false;
-	    	//request_q.add(number);
 	    	wantToenter=true;
 	    }
 	    else if(i==1) {
-	    	//Holder=0;
-	    	 msgString=null;
 	    	wantToenter=true;
 	    	
 	    }
 	    else if(i==2) {
-	    	//Holder=0;
-	    	 msgString=null;
 	    	wantToenter=true;
 	    }
 	    else if(i==3) {
-	    	//Holder=1;
-	    	 msgString=null;
 	    	wantToenter=true;
 	    }
 	  } 
@@ -84,7 +72,6 @@ class Prog extends Program{
 					request_q.remove();
 					//Execute CS
 					System.out.println("Node "+number+"  is Executing CS");
-					msgString="Node "+number+"  is Executing CS";
 					if(!request_q.isEmpty()) {
 						haveToken=false;
 						//send the token to the requesting node and point to that node
@@ -251,7 +238,6 @@ class Prog extends Program{
 					wantToenter=false;
 					//The sender has received token it can execute now
 					System.out.println("Node "+number+" is Executing CS");
-					msgString="Node \"+number+\" is Executing CS";
 					//Task Pending :I have to give visualized msg 
 					request_q.remove();
 					if(request_q.isEmpty()) {
@@ -401,14 +387,6 @@ class Prog extends Program{
 	 public String getText()
 	  {
 		return "Node is Executing CS "+haveToken;
-//	    if (msg == null)
-//	      msgString = "(null)";
-//	    else
-//	      msgString = msg.getText();
-//		 if(haveToken) {
-//			 return "Node "+number+" is Executing CS";
-//		 }else {
-//			 return " Request to "+((Msg) msg).getReceiver() +" is send";
-//		 }
+
 	  }
 }
