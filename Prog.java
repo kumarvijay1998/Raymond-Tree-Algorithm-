@@ -34,6 +34,7 @@ class Prog extends Program{
 	    }
 	    else if(i==1) {
 	    	wantToenter=true;
+	    	//haveToken=true;
 	    	
 	    }
 	    else if(i==2) {
@@ -49,6 +50,8 @@ class Prog extends Program{
 	public void main() {
 		int outChannels, inChannels, i;
 		// TODO Auto-generated method stub
+		 GlobalAssertion assertion=new only_one();
+		 test(assertion);
 		for(int j=0;j<4;j++) {
 		
 		inChannels = in().getSize();
@@ -387,6 +390,23 @@ class Prog extends Program{
 	 public String getText()
 	  {
 		return "Node is Executing CS "+haveToken;
-
 	  }
+}
+
+
+
+class only_one extends GlobalAssertion {
+    public String getText() {
+        return("More than 1 process entered the critical region!");
+    }
+
+	@Override
+	public boolean test(Program prog[]) {
+		// TODO Auto-generated method stub
+		 int count=0;
+       for (int j=0; j<prog.length; j++) {
+           if (((Prog)prog[j]).haveToken) count++;
+       }
+       return(count<=1);
+	}
 }
